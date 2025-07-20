@@ -3,3 +3,17 @@ data/embeddings/
 
 # Notebook files
 *.ipynb
+
+# load test
+X_test = joblib.load(hp["test_emb"])
+y_test = load_labels("test_processed")
+
+if sp.issparse(X_test):
+    X_test = X_test.astype(np.float32)
+
+# metrics
+
+test_pred = clf.predict(X_test)
+test_f1 = f1_score(y_test, test_pred, average="macro")
+print(f"TEST macro-F1 = {test_f1:.4f}")
+print(classification_report(y_test, test_pred, digits=3))
