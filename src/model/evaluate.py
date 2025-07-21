@@ -11,10 +11,10 @@ from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
-    ConfusionMatrixDisplay,
 )
 import pandas as pd
-
+import xgboost as xgb
+import seaborn as sns
 class HP(TypedDict):
     method      : str
     emb_path    : str
@@ -25,10 +25,10 @@ class HP(TypedDict):
     parquet_path: str
 
 hp: HP   = HP(
-    method      = "bert",                              # "tfidf" or "bert"
+    method      = "xgb",                              # "tfidf" or "bert" or "xgb"
     emb_path    = "data/embeddings/test_processed_bert.pkl",
-    model_path  = "models/classifiers/bert_mlp.pt",
-    out_dir     = "experiments/eval_bert",
+    model_path  = "models/classifiers/xgb_cls.json",
+    out_dir     = "experiments/eval_xgb_bert",
     label_names = [
         "astro-ph",
         "cond-mat",
@@ -47,8 +47,10 @@ out = pathlib.Path(hp["out_dir"])
 out.mkdir(parents=True, exist_ok=True)
 
 # load X 
-if hp["method"] == "bert":
+if hp["method"] == "bert" or hp["method"] == "xgb":
     X_test = torch.load(hp["emb_path"]).float()
+
+
 else:
     X_test = joblib.load(hp["emb_path"])
     if sp.issparse(X_test):
@@ -70,6 +72,13 @@ if hp["method"] == "bert":
     model.eval()
     with torch.no_grad():
         y_pred = model(X_test).argmax(dim=1).numpy()
+
+elif hp["method"] == "xgb":
+    dtest = xgb.DMatrix(X_test)
+    model = xgb.Booster()
+    model.load_model(hp["model_path"])
+    y_pred = np.argmax(model.predict(dtest), axis=1)
+    
 else:
     clf = joblib.load(hp["model_path"])
     y_pred = clf.predict(X_test)
@@ -89,9 +98,26 @@ print(classification_report(y_test, y_pred, target_names=hp["label_names"], digi
 pd.DataFrame(report_dict).T.to_csv(out / "classification_report.csv", index=True)
 
 # confusion matrix
+
 cm = confusion_matrix(y_test, y_pred, normalize="true")
-disp = ConfusionMatrixDisplay(cm, display_labels=hp["label_names"])
-disp.plot(cmap="Blues", xticks_rotation=45)
+
+fig, ax = plt.subplots(figsize=(7, 6))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt=".2f",
+    cmap="plasma",       
+    xticklabels=hp["label_names"],
+    yticklabels=hp["label_names"],
+    cbar_kws={"label": "Recall"},
+    ax=ax,
+)
+ax.set_xlabel("Predicted label")
+ax.set_ylabel("True label")
+ax.set_title("Normalized Confusion Matrix")
+
 plt.tight_layout()
-plt.savefig(out / "confusion_matrix.png", dpi=300)
-print("✓ CSV & confusion matrix saved to", out)
+fig_path = out / "confusion_matrix_plasma.png"
+plt.savefig(fig_path, dpi=300)
+plt.close()
+print("CSV & confusion matrix saved to", fig_path)
