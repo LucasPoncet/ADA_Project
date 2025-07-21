@@ -20,8 +20,8 @@ hp: HPTFIDF = {
     "train_emb": "data/embeddings/train_processed_tfidf.pkl",
     "val_emb"  : "data/embeddings/validation_processed_tfidf.pkl",
     "test_emb" : "data/embeddings/test_processed_tfidf.pkl",
-    "model_out": "models/classifiers/logreg_tfidf.pkl",
-    "max_iter" : 400,
+    "model_out": "models/classifiers/logreg_elasticnet_tfidf.pkl",
+    "max_iter" : 2000,
     "C"       : 2.0,
 }
 
@@ -42,8 +42,8 @@ if sp.issparse(X_train):
     X_val   = X_val.astype(np.float32)
 
 # grid definition
-C_grid            = [1.0, 2.0, 4.0]
-class_weight_grid = [None, "balanced"]
+C_grid            = [4.0]
+class_weight_grid = [None]
 
 best_f1   = -1.0
 best_acc  = -1.0
@@ -58,10 +58,12 @@ for C, cw in product(C_grid, class_weight_grid):
         max_iter     = hp["max_iter"],
         C            = C,
         solver       = "saga",
-        multi_class  = "multinomial",
         class_weight = cw,
         n_jobs       = -1,
-        verbose      = 0,
+        verbose      = 1,
+        penalty="elasticnet",
+        tol          = 1e-3,
+        l1_ratio=0.5,
     )
     clf.fit(X_train, y_train)
     val_f1 = f1_score(y_val, clf.predict(X_val), average="macro")
@@ -81,9 +83,9 @@ print(f"Meilleur val macro-F1 = {best_f1:.4f}  ({best_desc})")
 print(f"Modèle enregistré     = {hp['model_out']}")
 
 # Save the best model with accuracy
-if best_clf_acc is not None:
-    acc_out_path = hp["model_out"].replace(".pkl", "_acc.pkl")
-    joblib.dump(best_clf_acc, acc_out_path)
-    print(f"Modèle avec meilleure accuracy enregistré = {acc_out_path}")
+# if best_clf_acc is not None:
+#     acc_out_path = hp["model_out"].replace(".pkl", "_acc.pkl")
+#     joblib.dump(best_clf_acc, acc_out_path)
+#     print(f"Modèle avec meilleure accuracy enregistré = {acc_out_path}")
 
 
