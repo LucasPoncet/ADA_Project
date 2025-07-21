@@ -27,10 +27,9 @@ hp: HP = HP(
     train_parquet = "data/processed/train_processed.parquet",
     val_parquet   = "data/processed/validation_processed.parquet",
     params = dict(                 
-        max_depth        = 10,
-        eta              = 0.07,   # learning-rate
-        subsample        = 0.9,
-        gamma            = 1.0,   # regularization
+        max_depth        = 8,
+        eta              = 0.1,   # learning-rate
+        subsample        = 0.8,
         colsample_bytree = 0.6,
         min_child_weight = 5,
         objective        = "multi:softprob",
@@ -39,8 +38,8 @@ hp: HP = HP(
         nthread          = 8,      # adapt to your CPU core count ( On my macbook, 8 cores )
         seed             = 100,
     ),
-    rounds          = 800,
-    early_stop_round= 80,
+    rounds          = 400,
+    early_stop_round= 25,
 )
 
 # data loaders 
