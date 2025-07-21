@@ -31,6 +31,7 @@ hp: HP = HP(
         eta              = 0.1,   # learning-rate
         subsample        = 0.8,
         colsample_bytree = 0.6,
+        min_child_weight = 5,
         objective        = "multi:softprob",
         num_class        = 8,
         eval_metric      = "mlogloss",
@@ -53,8 +54,14 @@ X_va = load_emb(hp["val_emb"])
 y_tr = load_y(hp["train_parquet"], hp["parquet_col"])
 y_va = load_y(hp["val_parquet"],   hp["parquet_col"])
 
-dtrain = xgb.DMatrix(X_tr, label=y_tr)
-dval   = xgb.DMatrix(X_va, label=y_va)
+freq = np.bincount(y_tr, minlength=8) / len(y_tr)
+weights = 1.0 / (freq + 1e-6)                
+w_train = weights[y_tr]                 
+w_val   = weights[y_va]          
+
+dtrain = xgb.DMatrix(X_tr, label=y_tr, weight=w_train)
+dval   = xgb.DMatrix(X_va, label=y_va, weight=w_val)
+
 
 #  training 
 model = xgb.train(
