@@ -22,14 +22,15 @@ class HP (TypedDict):
 hp: HP = HP(
     train_emb = "data/embeddings/train_processed_bert.pkl",
     val_emb   = "data/embeddings/validation_processed_bert.pkl",
-    model_out = "models/classifiers/xgb_cls.json",
+    model_out = "models/classifiers/xgb_cls3.json",
     parquet_col = "category_number",
     train_parquet = "data/processed/train_processed.parquet",
     val_parquet   = "data/processed/validation_processed.parquet",
-    params = dict(                 # initial grid
+    params = dict(                 
         max_depth        = 10,
-        eta              = 0.1,   # learning-rate
-        subsample        = 0.8,
+        eta              = 0.07,   # learning-rate
+        subsample        = 0.9,
+        gamma            = 1.0,   # regularization
         colsample_bytree = 0.6,
         min_child_weight = 5,
         objective        = "multi:softprob",
@@ -38,8 +39,8 @@ hp: HP = HP(
         nthread          = 8,      # adapt to your CPU core count ( On my macbook, 8 cores )
         seed             = 100,
     ),
-    rounds          = 400,
-    early_stop_round= 25,
+    rounds          = 800,
+    early_stop_round= 80,
 )
 
 # data loaders 

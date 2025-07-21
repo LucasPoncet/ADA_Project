@@ -27,8 +27,8 @@ class HP(TypedDict):
 hp: HP   = HP(
     method      = "xgb",                              # "tfidf" or "bert" or "xgb"
     emb_path    = "data/embeddings/test_processed_bert.pkl",
-    model_path  = "models/classifiers/xgb_cls.json",
-    out_dir     = "experiments/eval_xgb_bert",
+    model_path  = "models/classifiers/xgb_cls3.json",
+    out_dir     = "experiments/eval_xgb3_bert",
     label_names = [
         "astro-ph",
         "cond-mat",
